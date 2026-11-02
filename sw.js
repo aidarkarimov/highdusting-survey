@@ -1,7 +1,7 @@
 // Offline cache: the app must work on sites with no signal.
-const CACHE = 'hd-survey-v8';
-const V = 8; // bump together with ?v= in index.html
-const CACHE_FILES = ['styles.css', 'data.js', 'calc.js', 'app.js'].map(f => `./${f}?v=${V}`);
+const CACHE = 'hd-survey-v10';
+const V = 10; // bump together with ?v= in index.html
+const CACHE_FILES = ['styles.css', 'data.js', 'calc.js', 'icons.js', 'app.js'].map(f => `./${f}?v=${V}`);
 const FILES = ['./', './index.html', ...CACHE_FILES, './icon.svg', './manifest.webmanifest'];
 
 self.addEventListener('install', e => {

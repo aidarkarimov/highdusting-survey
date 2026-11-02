@@ -22,7 +22,7 @@ const CITIES = [
 // rate: key in RATES.items → item is priced as qty × rate × labour multiplier.
 const CHECKLIST = [
   {
-    id: 'site', icon: '📍', title: 'Site & client',
+    id: 'site', icon: 'map-pin', title: 'Site & client',
     items: [
       { id: 'address', type: 'address', label: 'Site address', important: true },
       { id: 'city', type: 'select', label: 'City / region', options: CITIES, important: true },
@@ -69,7 +69,7 @@ const CHECKLIST = [
     ]
   },
   {
-    id: 'size', icon: '📐', title: 'Size & height',
+    id: 'size', icon: 'ruler', title: 'Size & height',
     items: [
       { id: 'areaTotal', type: 'number', unit: 'sq ft', label: 'Total building area', important: true },
       { id: 'areaScope', type: 'number', unit: 'sq ft', label: 'Area in scope', hint: 'Leave empty if the whole building is in scope' },
@@ -93,7 +93,7 @@ const CHECKLIST = [
     ]
   },
   {
-    id: 'scope', icon: '🧹', title: 'Scope',
+    id: 'scope', icon: 'list-checks', title: 'Scope',
     intro: 'Walk the site and mark everything present. If it exists but is excluded, list it under exclusions.',
     items: [
       { id: 'structure', type: 'qty', unit: 'area', label: 'Beams, joists, deck (by area)', hint: 'Priced by the area from "Size"', important: true },
@@ -114,7 +114,7 @@ const CHECKLIST = [
     ]
   },
   {
-    id: 'dust', icon: '🌫️', title: 'Dust',
+    id: 'dust', icon: 'wind', title: 'Dust',
     items: [
       {
         id: 'dustLevel', type: 'select', label: 'Dust level', important: true, options: [
@@ -144,7 +144,7 @@ const CHECKLIST = [
     ]
   },
   {
-    id: 'access', icon: '🏗️', title: 'Access & equipment',
+    id: 'access', icon: 'lift', title: 'Access & equipment',
     items: [
       { id: 'clientLift', type: 'yn', label: 'Can we use the client\'s own lift?', important: true },
       {
@@ -175,7 +175,7 @@ const CHECKLIST = [
     ]
   },
   {
-    id: 'protect', icon: '🛡️', title: 'Below & protection',
+    id: 'protect', icon: 'shield', title: 'Below & protection',
     items: [
       {
         id: 'below', type: 'multi', label: 'What is below the work area', important: true, options: [
@@ -205,7 +205,7 @@ const CHECKLIST = [
     ]
   },
   {
-    id: 'schedule', icon: '🕒', title: 'Schedule',
+    id: 'schedule', icon: 'clock', title: 'Schedule',
     items: [
       {
         id: 'window', type: 'select', label: 'Work window', important: true, options: [
@@ -223,7 +223,7 @@ const CHECKLIST = [
     ]
   },
   {
-    id: 'reqs', icon: '📋', title: 'Site requirements',
+    id: 'reqs', icon: 'clipboard', title: 'Site requirements',
     items: [
       { id: 'coi', type: 'yn', label: 'Certificate of insurance required? Amount?', important: true },
       { id: 'wsib', type: 'yn', label: 'WSIB / WCB clearance required?' },
@@ -241,7 +241,7 @@ const CHECKLIST = [
     ]
   },
   {
-    id: 'deal', icon: '🤝', title: 'Frequency & sign-off',
+    id: 'deal', icon: 'file-check', title: 'Frequency & sign-off',
     items: [
       {
         id: 'frequency', type: 'select', label: 'Frequency', important: true, options: [

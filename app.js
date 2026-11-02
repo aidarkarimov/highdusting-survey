@@ -2,36 +2,36 @@
 
 const UI = {
   appTitle: 'Site survey',
-  newSurvey: '+ New survey',
+  newSurvey: 'New survey',
   noSurveys: 'No surveys yet. Tap "New survey" on site.',
   settings: 'Settings',
-  back: '‹ Back',
+  back: 'Back',
   summary: 'Summary',
   photos: 'Photos',
   notes: 'Notes',
-  next: 'Next ›',
-  prev: '‹ Prev',
+  next: 'Next',
+  prev: 'Back',
   estimate: 'Approximate estimate',
   plusTax: '+ tax',
   answered: 'answered',
   untitled: 'Untitled',
   delete: 'Delete',
   confirmDelete: 'Delete this survey and its photos?',
-  myLocation: '📍 Locate me',
+  myLocation: 'Locate me',
   openMap: 'Open map',
   locating: 'Locating…',
   locFail: 'Could not locate. Enter the address manually.',
-  addPhoto: '📷 Take / add',
+  addPhoto: 'Take / add photo',
   morePhotos: 'Other photos',
   photoHint: 'Shot list: checks off when you take it',
   breakdown: 'Price breakdown',
   flags: 'Important',
   forgot: 'Not asked yet',
-  allAsked: 'All key questions answered 👍',
+  allAsked: 'All key questions answered',
   uncertain: 'Unknown',
   uncertainNote: 'price inputs are empty or unknown, so the range is wider.',
-  clientPdf: '📄 Client estimate (PDF)',
-  shareOffice: '📤 Send to office',
+  clientPdf: 'Client estimate (PDF)',
+  shareOffice: 'Send to office',
   copied: 'Copied to clipboard',
   saved: 'Saved',
   ratesTitle: 'Rates (CAD)',
@@ -51,8 +51,8 @@ const UI = {
   switchUser: 'Change',
   theme: 'Theme',
   themeAuto: 'Auto (as device)',
-  themeLight: '☀︎ Light',
-  themeDark: '☾ Dark',
+  themeLight: 'Light',
+  themeDark: 'Dark',
   phone: 'Phone',
   email: ['Email', 'Email'],
   total: 'Total',
@@ -198,7 +198,7 @@ function renderLogin(picked) {
   const draw = (title, note, err) => {
     app.innerHTML = `
       <main class="wrap login">
-        <button class="ghost" id="back">${T('back')}</button>
+        <button class="ghost" id="back">${ic('chevron-left')}${T('back')}</button>
         <div class="login-who"><span class="avatar big">${esc(u.name[0])}</span><h2>${esc(u.name)}</h2>
           ${note ? `<p class="hint">${note}</p>` : ''}</div>
         <label class="lbl">${title}</label>
@@ -246,12 +246,12 @@ function route() {
 function renderHome() {
   const list = Object.values(surveys).filter(canSee).sort((a, b) => b.updated - a.updated);
   app.innerHTML = `
-    <header class="top"><div class="brand"><img src="icon.svg" alt=""><div><b>HighDusting</b><small>👤 ${esc(currentUser().name)}</small></div></div>
-      <div class="top-actions"><button class="ghost" id="themeBtn" title="${T('theme')}">${currentTheme() === 'light' ? '☾' : '☀︎'}</button>
-      <button class="ghost" data-go="#/settings" title="${T('settings')}">⚙︎</button>
-      <button class="ghost" id="outBtn">${T('signOut')}</button></div></header>
+    <header class="top"><div class="brand"><img src="icon.svg" alt=""><div><b>HighDusting</b><small class="who">${ic('user')} ${esc(currentUser().name)}</small></div></div>
+      <div class="top-actions"><button class="ghost icon-btn" id="themeBtn" title="${T('theme')}" aria-label="${T('theme')}">${ic(currentTheme() === 'light' ? 'moon' : 'sun')}</button>
+      <button class="ghost icon-btn" data-go="#/settings" title="${T('settings')}" aria-label="${T('settings')}">${ic('settings')}</button>
+      <button class="ghost" id="outBtn">${ic('log-out')}<span class="hide-xs">${T('signOut')}</span></button></div></header>
     <main class="wrap">
-      <button class="primary big" id="new">${T('newSurvey')}</button>
+      <button class="primary big" id="new">${ic('plus')} ${T('newSurvey')}</button>
       ${list.length ? '' : `<p class="empty">${T('noSurveys')}</p>`}
       <ul class="cards">${list.map(s => {
         const e = calcEstimate(s.answers, rates);
@@ -278,14 +278,14 @@ function bindGo() { app.querySelectorAll('[data-go]').forEach(el => el.onclick =
 // ---------- survey ----------
 function renderSurvey(s, secId) {
   const tabs = [...CHECKLIST.map(c => ({ id: c.id, icon: c.icon, title: c.title })),
-    { id: 'photos', icon: '📷', title: UI.photos }, { id: 'notes', icon: '📝', title: UI.notes }, { id: 'summary', icon: '💲', title: UI.summary }];
+    { id: 'photos', icon: 'camera', title: UI.photos }, { id: 'notes', icon: 'file-text', title: UI.notes }, { id: 'summary', icon: 'calculator', title: UI.summary }];
   const idx = Math.max(0, tabs.findIndex(t => t.id === secId));
   const sec = tabs[idx];
   app.innerHTML = `
-    <header class="top"><button class="ghost" data-go="#/">${T('back')}</button>
+    <header class="top"><button class="ghost" data-go="#/">${ic('chevron-left')}${T('back')}</button>
       <div class="top-title">${esc(surveyTitle(s))}</div>
-      <button class="ghost danger" id="del" title="${T('delete')}">🗑</button></header>
-    <div class="shell"><nav class="tabs" id="tabs">${tabs.map((t, i) => `<button class="tab ${i === idx ? 'on' : ''}" data-tab="${t.id}">${t.icon} ${L(t.title)}<span class="tick" data-tick="${t.id}"></span></button>`).join('')}</nav>
+      <button class="ghost danger icon-btn" id="del" title="${T('delete')}" aria-label="${T('delete')}">${ic('trash')}</button></header>
+    <div class="shell"><nav class="tabs" id="tabs">${tabs.map((t, i) => `<button class="tab ${i === idx ? 'on' : ''}" data-tab="${t.id}"><span class="tab-l">${ic(t.icon)}${L(t.title)}</span><span class="tick" data-tick="${t.id}"></span></button>`).join('')}</nav>
     <main class="wrap" id="body"></main></div>
     <footer class="bar" id="bar"></footer>`;
   app.querySelector('#del').onclick = async () => {
@@ -305,8 +305,8 @@ function renderSurvey(s, secId) {
 
   if (sec.id !== 'summary') {
     const nav = document.createElement('div'); nav.className = 'pager';
-    nav.innerHTML = `${idx > 0 ? `<button class="ghost" data-go="#/e/${s.id}/${tabs[idx - 1].id}">${T('prev')}</button>` : '<span></span>'}
-      <button class="primary" data-go="#/e/${s.id}/${tabs[idx + 1].id}">${T('next')}</button>`;
+    nav.innerHTML = `${idx > 0 ? `<button class="ghost" data-go="#/e/${s.id}/${tabs[idx - 1].id}">${ic('chevron-left')}${T('prev')}</button>` : '<span></span>'}
+      <button class="primary" data-go="#/e/${s.id}/${tabs[idx + 1].id}">${T('next')}${ic('chevron-right')}</button>`;
     body.appendChild(nav); bindGo();
   }
   updateBar(s);
@@ -319,13 +319,13 @@ function updateBar(s) {
   const e = calcEstimate(s.answers, rates);
   const bar = document.getElementById('bar');
   if (bar) bar.innerHTML = `<div><small>${T('estimate')}</small><b>${e.total ? `${money(e.low)} – ${money(e.high)}` : '—'}</b>
-    <small>${e.total ? T('plusTax') + ` ${e.taxRate}%` : ''}${e.unknowns.length ? ` · ${T('uncertain')}: ${e.unknowns.length}` : ''}</small></div>
-    <button class="primary" onclick="go('#/e/${s.id}/summary')">${T('summary')} ›</button>`;
+    <small>${[e.total ? `${T('plusTax')} ${e.taxRate}%` : '', e.unknowns.length ? `${T('uncertain')}: ${e.unknowns.length}` : ''].filter(Boolean).join(' · ')}</small></div>
+    <button class="primary" onclick="go('#/e/${s.id}/summary')">${T('summary')} ${ic('chevron-right')}</button>`;
   for (const sec of CHECKLIST) {
     const el = document.querySelector(`[data-tick="${sec.id}"]`);
     if (!el) continue;
     const p = sectionProgress(sec, s.answers);
-    el.textContent = p.done === p.total ? ' ✓' : ` ${p.done}/${p.total}`;
+    el.innerHTML = p.done === p.total ? ic('check', 'ok-ic') : `${p.done}/${p.total}`;
   }
   const ph = document.querySelector('[data-tick="photos"]');
   if (ph) ph.textContent = s.photos.length ? ` ${s.photos.length}` : '';
@@ -334,7 +334,7 @@ function updateBar(s) {
 }
 
 function renderSection(s, sec, body) {
-  body.innerHTML = `<h2>${sec.icon} ${L(sec.title)}</h2>${sec.intro ? `<p class="intro">${L(sec.intro)}</p>` : ''}<div class="items"></div>`;
+  body.innerHTML = `<h2 class="h-ic">${ic(sec.icon)}${L(sec.title)}</h2>${sec.intro ? `<p class="intro">${L(sec.intro)}</p>` : ''}<div class="items"></div>`;
   const box = body.querySelector('.items');
   for (const it of sec.items) {
     const el = document.createElement('div');
@@ -375,14 +375,14 @@ function renderItem(s, it, el) {
       html = `<div class="chips"><button type="button" class="chip ${on ? 'on yes' : ''}" data-q="1">${L('Yes, include')}</button>
         <button type="button" class="chip ${v && v.on === false ? 'on' : ''}" data-q="0">${L('No')}</button></div>
         ${on && it.unit !== 'area' ? `<div class="num"><input type="number" inputmode="numeric" min="0" step="any" value="${esc(v.qty)}" placeholder="0"><span>${unit}</span>
-          <button type="button" class="step" data-d="-1">−</button><button type="button" class="step" data-d="1">+</button></div>` : ''}`; break;
+          <button type="button" class="step" data-d="-1" aria-label="minus">${ic('minus')}</button><button type="button" class="step" data-d="1" aria-label="plus">${ic('plus')}</button></div>` : ''}`; break;
     }
     case 'address': {
       const t = v?.text || '';
       const map = v?.lat ? `https://maps.google.com/?q=${v.lat},${v.lon}` : t ? `https://maps.google.com/?q=${encodeURIComponent(t)}` : '';
       html = `<textarea rows="2" placeholder="123 Industrial Rd, Toronto, ON">${esc(t)}</textarea>
-        <div class="row"><button type="button" class="ghost" data-loc>${T('myLocation')}</button>
-        ${map ? `<a class="ghost" href="${map}" target="_blank" rel="noopener">${T('openMap')} ↗</a>` : ''}</div>`; break;
+        <div class="row"><button type="button" class="ghost" data-loc>${ic('locate')}${T('myLocation')}</button>
+        ${map ? `<a class="ghost" href="${map}" target="_blank" rel="noopener">${ic('external')} ${T('openMap')}</a>` : ''}</div>`; break;
     }
   }
   el.innerHTML = label + html;
@@ -445,11 +445,11 @@ function locate(s, it, el) {
 // ---------- photos ----------
 async function renderPhotos(s, body) {
   const byPrompt = (pid) => s.photos.filter(p => p.prompt === pid);
-  body.innerHTML = `<h2>📷 ${T('photos')}</h2><p class="intro">${T('photoHint')}</p>
+  body.innerHTML = `<h2 class="h-ic">${ic('camera')}${T('photos')}</h2><p class="intro">${T('photoHint')}</p>
     <div class="items">${[...PHOTO_PROMPTS, { id: 'other', l: UI.morePhotos }].map(p => `
       <div class="item ${byPrompt(p.id).length ? 'done' : ''}"><label class="lbl">${L(p.l)}</label>
         <div class="thumbs" data-thumbs="${p.id}"></div>
-        <label class="ghost file">${T('addPhoto')}<input type="file" accept="image/*" capture="environment" multiple data-prompt="${p.id}" hidden></label>
+        <label class="ghost file">${ic('camera')}${T('addPhoto')}<input type="file" accept="image/*" capture="environment" multiple data-prompt="${p.id}" hidden></label>
       </div>`).join('')}</div>`;
   body.querySelectorAll('input[type=file]').forEach(inp => inp.onchange = async () => {
     for (const f of inp.files) {
@@ -463,7 +463,7 @@ async function renderPhotos(s, body) {
     const box = body.querySelector(`[data-thumbs="${p.prompt}"]`);
     if (!box) continue;
     const d = document.createElement('div'); d.className = 'thumb';
-    d.innerHTML = `<img src="${await photoUrl(p.id)}" alt=""><button type="button" title="${T('delete')}">×</button>`;
+    d.innerHTML = `<img src="${await photoUrl(p.id)}" alt=""><button type="button" title="${T('delete')}" aria-label="${T('delete')}">${ic('x')}</button>`;
     d.querySelector('img').onclick = () => window.open(urlCache[p.id]);
     d.querySelector('button').onclick = async () => {
       await photoDel(p.id); s.photos = s.photos.filter(x => x.id !== p.id); touch(s); renderSurvey(s, 'photos');
@@ -473,7 +473,7 @@ async function renderPhotos(s, body) {
 }
 
 function renderNotes(s, body) {
-  body.innerHTML = `<h2>📝 ${T('notes')}</h2><textarea class="notes" rows="10" placeholder="${T('notesPh')}">${esc(s.notes)}</textarea>`;
+  body.innerHTML = `<h2 class="h-ic">${ic('file-text')}${T('notes')}</h2><textarea class="notes" rows="10" placeholder="${T('notesPh')}">${esc(s.notes)}</textarea>`;
   const ta = body.querySelector('textarea');
   ta.oninput = () => { s.notes = ta.value; touch(s); };
 }
@@ -487,20 +487,20 @@ async function renderSummary(s, body) {
     <div class="price-hero">
       <small>${T('estimate')}</small>
       <div class="range">${e.total ? `${money(e.low)} – ${money(e.high)}` : '—'}</div>
-      <small>${T('plusTax')} ${e.taxRate}% (${L('up to')} ${money(tax)}) · ${L('point estimate')} ${money(e.total)}</small>
+      ${e.total ? `<small>${T('plusTax')} ${e.taxRate}% (${L('up to')} ${money(tax)}) · ${L('point estimate')} ${money(e.total)}</small>` : ''}
       ${e.unknowns.length ? `<div class="hint">${e.unknowns.length} ${T('uncertainNote')}</div>` : ''}
     </div>
-    ${e.flags.length ? `<h3>⚠️ ${T('flags')}</h3><ul class="flags">${e.flags.map(f => `<li class="${f.level}">${esc(f.text)}</li>`).join('')}</ul>` : ''}
-    <h3>❓ ${T('forgot')}</h3>
-    ${miss.length ? `<ul class="forgot">${miss.map(m => `<li data-go="#/e/${s.id}/${m.sec.id}"><span>${m.sec.icon}</span> ${esc(L(m.it.label))}${m.unknown ? ` <i>(${L('unknown')})</i>` : ''} ›</li>`).join('')}</ul>` : `<p class="ok">${T('allAsked')}</p>`}
+    ${e.flags.length ? `<h3 class="h-ic">${ic('alert')}${T('flags')}</h3><ul class="flags">${e.flags.map(f => `<li class="${f.level}">${esc(f.text)}</li>`).join('')}</ul>` : ''}
+    <h3 class="h-ic">${ic('help')}${T('forgot')}</h3>
+    ${miss.length ? `<ul class="forgot">${miss.map(m => `<li data-go="#/e/${s.id}/${m.sec.id}">${ic(m.sec.icon)}<span class="grow">${esc(L(m.it.label))}${m.unknown ? ` <i>(${L('unknown')})</i>` : ''}</span>${ic('chevron-right', 'chev')}</li>`).join('')}</ul>` : `<p class="ok h-ic">${ic('check-circle')}${T('allAsked')}</p>`}
     </div><div>
-    <h3 class="first">🧮 ${T('breakdown')}</h3>
+    <h3 class="first h-ic">${ic('calculator')}${T('breakdown')}</h3>
     <table class="lines">${e.lines.map(l => `<tr><td>${esc(l.label)}${l.note ? `<small>${esc(l.note)}</small>` : ''}</td><td>${money(l.amount)}</td></tr>`).join('')}
       <tr class="tot"><td>${T('total')}</td><td>${money(e.total)}</td></tr></table>
     <div class="actions">
-      <button class="primary big" data-go="#/e/${s.id}/print">${T('clientPdf')}</button>
-      <button class="ghost big" id="share">${T('shareOffice')}</button>
-      <button class="ghost" id="dup">${T('duplicate')}</button>
+      <button class="primary big" data-go="#/e/${s.id}/print">${ic('file-down')}${T('clientPdf')}</button>
+      <button class="ghost big" id="share">${ic('send')}${T('shareOffice')}</button>
+      <button class="ghost" id="dup">${ic('copy')}${T('duplicate')}</button>
     </div></div></div>`;
   bindGo();
   body.querySelector('#share').onclick = () => shareOffice(s, e);
@@ -515,19 +515,19 @@ async function renderSummary(s, body) {
 function officeText(s, e) {
   const a = s.answers, lines = [];
   lines.push(`HighDusting · ${T('appTitle')}`);
-  lines.push(`${L('Client')}: ${a.clientName || '—'} · ${a.contactName || ''} ${a.contactPhone || ''} ${a.contactEmail || ''}`);
+  lines.push(`${L('Client')}: ${[a.clientName || '—', a.contactName, a.contactPhone, a.contactEmail].filter(Boolean).join(' · ')}`);
   lines.push(`${L('Address')}: ${a.address?.text || '—'}${a.address?.lat ? ` (https://maps.google.com/?q=${a.address.lat},${a.address.lon})` : ''}`);
   lines.push(`${T('estimate')}: ${money(e.low)} – ${money(e.high)} ${T('plusTax')} ${e.taxRate}%`);
   lines.push('');
   for (const sec of CHECKLIST) {
     const rows = sec.items.filter(it => isAnswered(it, a[it.id])).map(it => `  • ${L(it.label)}: ${fmtAnswer(it, a[it.id])}`);
-    if (rows.length) lines.push(`${sec.icon} ${L(sec.title)}`, ...rows);
+    if (rows.length) lines.push(L(sec.title).toUpperCase(), ...rows);
   }
-  if (e.flags.length) lines.push('', `⚠️ ${T('flags')}:`, ...e.flags.map(f => '  • ' + f.text));
+  if (e.flags.length) lines.push('', `${T('flags').toUpperCase()}:`, ...e.flags.map(f => '  • ' + f.text));
   const miss = forgotten(a);
-  if (miss.length) lines.push('', `❓ ${T('forgot')}:`, ...miss.map(m => '  • ' + L(m.it.label)));
-  lines.push('', `🧮 ${T('breakdown')}:`, ...e.lines.map(l => `  • ${l.label}: ${money(l.amount)}`));
-  if (s.notes) lines.push('', `📝 ${s.notes}`);
+  if (miss.length) lines.push('', `${T('forgot').toUpperCase()}:`, ...miss.map(m => '  • ' + L(m.it.label)));
+  lines.push('', `${T('breakdown').toUpperCase()}:`, ...e.lines.map(l => `  • ${l.label}: ${money(l.amount)}`));
+  if (s.notes) lines.push('', `${T('notes').toUpperCase()}:`, s.notes);
   lines.push('', `${L('Photos')}: ${s.photos.length}`);
   if (estimatorOf(s)) lines.push(`${L('Estimator')}: ${estimatorOf(s)}`);
   return lines.join('\n');
@@ -585,8 +585,8 @@ async function renderPrint(s) {
   const fmt = (d) => d.toLocaleDateString('en-CA', { dateStyle: 'long' });
 
   app.innerHTML = `
-    <div class="noprint top"><button class="ghost" onclick="history.back()">${T('back')}</button>
-      <button class="primary" onclick="window.print()">🖨 PDF</button></div>
+    <div class="noprint top"><button class="ghost" onclick="history.back()">${ic('chevron-left')}${T('back')}</button>
+      <button class="primary" onclick="window.print()">${ic('printer')} PDF</button></div>
     <article class="doc">
       <header><div><h1>${esc(settings.company)}</h1><p>${esc(settings.phone)} · ${esc(settings.email)}</p></div>
         <div class="doc-meta"><b>Preliminary estimate</b><br>${fmt(today)}<br>Valid until ${fmt(valid)}</div></header>
@@ -608,10 +608,10 @@ function setPath(o, p, v) { const ks = p.split('.'); const last = ks.pop(); ks.r
 
 function renderSettings() {
   app.innerHTML = `
-    <header class="top"><button class="ghost" data-go="#/">${T('back')}</button><div class="top-title">${T('settings')}</div><span></span></header>
+    <header class="top"><button class="ghost" data-go="#/">${ic('chevron-left')}${T('back')}</button><div class="top-title">${T('settings')}</div><span></span></header>
     <main class="wrap">
       <div class="item"><label class="lbl">${T('theme')}</label><div class="chips">
-        ${[['auto', 'themeAuto'], ['light', 'themeLight'], ['dark', 'themeDark']].map(([v, k]) => `<button class="chip ${(settings.theme || 'auto') === v ? 'on' : ''}" data-theme-set="${v}">${T(k)}</button>`).join('')}</div></div>
+        ${[['auto', 'themeAuto'], ['light', 'themeLight'], ['dark', 'themeDark']].map(([v, k]) => `<button class="chip ${(settings.theme || 'auto') === v ? 'on' : ''}" data-theme-set="${v}">${ic({ auto: 'monitor', light: 'sun', dark: 'moon' }[v])}${T(k)}</button>`).join('')}</div></div>
       <div class="item"><label class="lbl">${T('signIn')}</label><div class="row" style="margin:0;align-items:center;justify-content:space-between"><b>${esc(currentUser().name)}</b><button class="ghost" id="outBtn2">${T('signOut')}</button></div></div>
       ${['company', 'phone', 'email'].map(k => `<div class="item"><label class="lbl">${T(k)}</label><input data-set="${k}" value="${esc(settings[k])}"></div>`).join('')}
       <h2>${T('ratesTitle')}</h2><p class="intro">${T('ratesNote')}</p>
