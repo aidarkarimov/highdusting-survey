@@ -50,7 +50,7 @@ const UI = {
   signOut: 'Sign out',
   switchUser: 'Change',
   theme: 'Theme',
-  themeAuto: 'Auto (as device)',
+  themeAuto: 'Auto',
   themeLight: 'Light',
   themeDark: 'Dark',
   phone: 'Phone',
@@ -188,7 +188,7 @@ function renderLogin(picked) {
       <main class="wrap login">
         <div class="brand login-brand"><img src="icon.svg" alt=""><div><b>HighDusting</b><small>${T('appTitle')}</small></div></div>
         <h2>${T('whoAreYou')}</h2>
-        <div class="login-users">${USERS.map(x => `<button class="chip user-btn" data-user="${x.id}"><span class="avatar">${esc(x.name[0])}</span>${esc(x.name)}</button>`).join('')}</div>
+        <div class="login-users">${USERS.map(x => `<button class="user-btn" data-user="${x.id}"><span class="avatar">${esc(x.name[0])}</span><span class="grow">${esc(x.name)}</span>${ic('chevron-right', 'chev')}</button>`).join('')}</div>
       </main>`;
     app.querySelectorAll('[data-user]').forEach(b => b.onclick = () => renderLogin(b.dataset.user));
     return;
@@ -261,7 +261,7 @@ function renderHome() {
           <div class="card-main"><b>${esc(surveyTitle(s))}</b>
           <small>${esc(s.answers.address?.text || '')}</small>
           <small>${new Date(s.updated).toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' })} · ${done}/${all} ${T('answered')}</small></div>
-          <div class="card-price">${e.total ? `${money(e.low)}<br>– ${money(e.high)}` : '—'}</div></li>`;
+          <div class="card-price">${e.total ? `${money(e.low)}<br>– ${money(e.high)}` : '—'}</div>${ic('chevron-right', 'chev')}</li>`;
       }).join('')}</ul>
     </main>`;
   app.querySelector('#outBtn').onclick = signOut;
@@ -294,6 +294,7 @@ function renderSurvey(s, secId) {
     delete surveys[s.id]; saveSurveys(); go('#/');
   };
   app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => go(`#/e/${s.id}/${b.dataset.tab}`));
+  document.documentElement.style.setProperty('--top-h', app.querySelector('.top').offsetHeight + 'px');
   app.querySelector('.tab.on').scrollIntoView({ inline: 'center', block: 'nearest' });
   bindGo();
 
@@ -348,7 +349,7 @@ function renderItem(s, it, el) {
   const a = s.answers, v = a[it.id];
   const set = (val, rerender) => { a[it.id] = val; touch(s); if (rerender) renderItem(s, it, el); markDone(); };
   const markDone = () => el.classList.toggle('done', !!isAnswered(it, a[it.id]) && a[it.id] !== 'unknown');
-  const label = `<label class="lbl">${L(it.label)}${it.important ? ' <i class="req">•</i>' : ''}</label>${it.hint ? `<div class="hint">${L(it.hint)}</div>` : ''}`;
+  const label = `<label class="lbl">${L(it.label)}${it.important ? ' <i class="req" title="Important">•</i>' : ''}${ic('check', 'done-ic')}</label>${it.hint ? `<div class="hint">${L(it.hint)}</div>` : ''}`;
   const unit = it.unit ? (Array.isArray(it.unit) ? L(it.unit) : it.unit) : '';
   let html = '';
   switch (it.type) {
@@ -365,14 +366,14 @@ function renderItem(s, it, el) {
       html = `<div class="num"><input type="number" inputmode="decimal" min="0" step="any" value="${esc(v)}"><span>${unit}</span></div>${extra}`; break;
     }
     case 'select':
-      html = `<div class="chips col">${it.options.map(o => `<button type="button" class="chip ${v === o.v ? 'on' : ''}" data-v="${o.v}">${L(o.l)}</button>`).join('')}</div>`; break;
+      html = `<div class="opts" role="radiogroup">${it.options.map(o => `<button type="button" role="radio" aria-checked="${v === o.v}" class="chip opt ${v === o.v ? 'on' : ''}" data-v="${o.v}"><span>${L(o.l)}</span>${ic('check', 'mark')}</button>`).join('')}</div>`; break;
     case 'multi':
-      html = `<div class="chips col">${it.options.map(o => `<button type="button" class="chip ${(v || []).includes(o.v) ? 'on' : ''}" data-v="${o.v}">${L(o.l)}</button>`).join('')}</div>`; break;
+      html = `<div class="opts multi">${it.options.map(o => { const on = (v || []).includes(o.v); return `<button type="button" role="checkbox" aria-checked="${on}" class="chip opt ${on ? 'on' : ''}" data-v="${o.v}"><span class="box">${ic('check')}</span><span>${L(o.l)}</span></button>`; }).join('')}</div>`; break;
     case 'yn':
-      html = `<div class="chips">${YN.map(o => `<button type="button" class="chip ${v === o.v ? 'on' : ''} ${o.v}" data-v="${o.v}">${L(o.l)}</button>`).join('')}</div>`; break;
+      html = `<div class="seg">${YN.map(o => `<button type="button" class="chip ${v === o.v ? 'on' : ''} ${o.v}" data-v="${o.v}">${L(o.l)}</button>`).join('')}</div>`; break;
     case 'qty': {
       const on = v && v.on;
-      html = `<div class="chips"><button type="button" class="chip ${on ? 'on yes' : ''}" data-q="1">${L('Yes, include')}</button>
+      html = `<div class="seg"><button type="button" class="chip ${on ? 'on yes' : ''}" data-q="1">${L('Yes, include')}</button>
         <button type="button" class="chip ${v && v.on === false ? 'on' : ''}" data-q="0">${L('No')}</button></div>
         ${on && it.unit !== 'area' ? `<div class="num"><input type="number" inputmode="numeric" min="0" step="any" value="${esc(v.qty)}" placeholder="0"><span>${unit}</span>
           <button type="button" class="step" data-d="-1" aria-label="minus">${ic('minus')}</button><button type="button" class="step" data-d="1" aria-label="plus">${ic('plus')}</button></div>` : ''}`; break;
@@ -385,7 +386,7 @@ function renderItem(s, it, el) {
         ${map ? `<a class="ghost" href="${map}" target="_blank" rel="noopener">${ic('external')} ${T('openMap')}</a>` : ''}</div>`; break;
     }
   }
-  el.innerHTML = label + html;
+  el.innerHTML = label + `<div class="ctl">${html}</div>`;
   markDone();
 
   // bind
@@ -447,9 +448,9 @@ async function renderPhotos(s, body) {
   const byPrompt = (pid) => s.photos.filter(p => p.prompt === pid);
   body.innerHTML = `<h2 class="h-ic">${ic('camera')}${T('photos')}</h2><p class="intro">${T('photoHint')}</p>
     <div class="items">${[...PHOTO_PROMPTS, { id: 'other', l: UI.morePhotos }].map(p => `
-      <div class="item ${byPrompt(p.id).length ? 'done' : ''}"><label class="lbl">${L(p.l)}</label>
-        <div class="thumbs" data-thumbs="${p.id}"></div>
-        <label class="ghost file">${ic('camera')}${T('addPhoto')}<input type="file" accept="image/*" capture="environment" multiple data-prompt="${p.id}" hidden></label>
+      <div class="item ${byPrompt(p.id).length ? 'done' : ''}"><label class="lbl">${L(p.l)}${ic('check', 'done-ic')}</label>
+        <div class="ctl"><div class="thumbs" data-thumbs="${p.id}"></div>
+        <label class="ghost file">${ic('camera')}${T('addPhoto')}<input type="file" accept="image/*" capture="environment" multiple data-prompt="${p.id}" hidden></label></div>
       </div>`).join('')}</div>`;
   body.querySelectorAll('input[type=file]').forEach(inp => inp.onchange = async () => {
     for (const f of inp.files) {
@@ -490,7 +491,7 @@ async function renderSummary(s, body) {
       ${e.total ? `<small>${T('plusTax')} ${e.taxRate}% (${L('up to')} ${money(tax)}) · ${L('point estimate')} ${money(e.total)}</small>` : ''}
       ${e.unknowns.length ? `<div class="hint">${e.unknowns.length} ${T('uncertainNote')}</div>` : ''}
     </div>
-    ${e.flags.length ? `<h3 class="h-ic">${ic('alert')}${T('flags')}</h3><ul class="flags">${e.flags.map(f => `<li class="${f.level}">${esc(f.text)}</li>`).join('')}</ul>` : ''}
+    ${e.flags.length ? `<h3 class="h-ic">${ic('alert')}${T('flags')}</h3><ul class="flags">${e.flags.map(f => `<li class="${f.level}">${ic(f.level === 'info' ? 'help' : 'alert')}<span>${esc(f.text)}</span></li>`).join('')}</ul>` : ''}
     <h3 class="h-ic">${ic('help')}${T('forgot')}</h3>
     ${miss.length ? `<ul class="forgot">${miss.map(m => `<li data-go="#/e/${s.id}/${m.sec.id}">${ic(m.sec.icon)}<span class="grow">${esc(L(m.it.label))}${m.unknown ? ` <i>(${L('unknown')})</i>` : ''}</span>${ic('chevron-right', 'chev')}</li>`).join('')}</ul>` : `<p class="ok h-ic">${ic('check-circle')}${T('allAsked')}</p>`}
     </div><div>
@@ -610,10 +611,10 @@ function renderSettings() {
   app.innerHTML = `
     <header class="top"><button class="ghost" data-go="#/">${ic('chevron-left')}${T('back')}</button><div class="top-title">${T('settings')}</div><span></span></header>
     <main class="wrap">
-      <div class="item"><label class="lbl">${T('theme')}</label><div class="chips">
-        ${[['auto', 'themeAuto'], ['light', 'themeLight'], ['dark', 'themeDark']].map(([v, k]) => `<button class="chip ${(settings.theme || 'auto') === v ? 'on' : ''}" data-theme-set="${v}">${ic({ auto: 'monitor', light: 'sun', dark: 'moon' }[v])}${T(k)}</button>`).join('')}</div></div>
-      <div class="item"><label class="lbl">${T('signIn')}</label><div class="row" style="margin:0;align-items:center;justify-content:space-between"><b>${esc(currentUser().name)}</b><button class="ghost" id="outBtn2">${T('signOut')}</button></div></div>
-      ${['company', 'phone', 'email'].map(k => `<div class="item"><label class="lbl">${T(k)}</label><input data-set="${k}" value="${esc(settings[k])}"></div>`).join('')}
+      <div class="items"><div class="item"><label class="lbl">${T('theme')}</label><div class="ctl"><div class="seg">
+        ${[['auto', 'themeAuto'], ['light', 'themeLight'], ['dark', 'themeDark']].map(([v, k]) => `<button class="chip ${(settings.theme || 'auto') === v ? 'on' : ''}" data-theme-set="${v}">${ic({ auto: 'monitor', light: 'sun', dark: 'moon' }[v])}${T(k)}</button>`).join('')}</div></div></div>
+      <div class="item"><label class="lbl">${T('signIn')}</label><div class="ctl signed"><b>${esc(currentUser().name)}</b><button class="ghost" id="outBtn2">${ic('log-out')}${T('signOut')}</button></div></div>
+      ${['company', 'phone', 'email'].map(k => `<div class="item"><label class="lbl">${T(k)}</label><div class="ctl"><input data-set="${k}" value="${esc(settings[k])}"></div></div>`).join('')}</div>
       <h2>${T('ratesTitle')}</h2><p class="intro">${T('ratesNote')}</p>
       <div class="rates">${Object.entries(RATE_LABELS).map(([k, lab]) => `
         <label class="rate"><span>${L(lab)}</span><input type="number" step="any" inputmode="decimal" data-rate="${k}" value="${getPath(rates, k)}"></label>`).join('')}</div>
