@@ -362,3 +362,10 @@ const RATE_LABELS = {
   'tax.NS': 'Tax NS (HST), %',
   'tax.MB': 'Tax MB, %',
 };
+
+// Estimators who can sign in. Each sets their own 4-digit PIN on first sign-in on a device.
+const USERS = [
+  { id: 'aidar', name: 'Aidar' },
+  { id: 'sergey', name: 'Sergey' },
+  { id: 'alex', name: 'Alex' },
+];

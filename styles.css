@@ -168,3 +168,20 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); border-color: tr
   .sum-grid .actions { grid-template-columns: 1fr; }
   .bar { padding-left: max(24px, calc((100vw - 1320px) / 2 + 274px)); padding-right: max(24px, calc((100vw - 1320px) / 2 + 24px)); }
 }
+
+/* ---------- sign-in ---------- */
+.login { max-width: 460px; padding-top: calc(48px + env(safe-area-inset-top)); }
+.login-brand { justify-content: center; margin-bottom: 28px; }
+.login-brand img { width: 52px; height: 52px; }
+.login h2 { text-align: center; }
+.login-users { display: grid; gap: 12px; margin-top: 18px; }
+.user-btn { display: flex; align-items: center; gap: 14px; font-size: 20px; font-weight: 600; padding: 14px 16px; min-height: 72px; background: var(--panel); }
+.avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex: none; }
+.avatar.big { width: 72px; height: 72px; font-size: 30px; }
+.login-who { text-align: center; margin: 18px 0 22px; display: flex; flex-direction: column; align-items: center; }
+.login-who h2 { margin: 10px 0 0; }
+.pin { font-size: 32px; letter-spacing: .6em; text-align: center; padding: 14px; }
+.pin-err { color: var(--stop); text-align: center; min-height: 1.4em; font-weight: 600; }
+.top-actions { display: flex; gap: 6px; flex-wrap: nowrap; flex: none; }
+.top-actions .ghost { padding: 10px 12px; }
+.brand { min-width: 0; }

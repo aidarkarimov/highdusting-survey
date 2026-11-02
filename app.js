@@ -39,6 +39,16 @@ const UI = {
   resetRates: 'Reset to defaults',
   company: 'Company',
   estimator: 'Estimator name',
+  signIn: 'Sign in',
+  whoAreYou: 'Who is doing the survey?',
+  enterPin: 'Enter your PIN',
+  createPin: 'Create a 4-digit PIN',
+  repeatPin: 'Repeat the PIN',
+  pinMismatch: 'PINs do not match, try again',
+  wrongPin: 'Wrong PIN',
+  firstTime: 'First sign-in on this device',
+  signOut: 'Sign out',
+  switchUser: 'Change',
   theme: 'Theme',
   themeAuto: 'Auto (as device)',
   themeLight: '☀︎ Light',
@@ -76,6 +86,18 @@ function applyTheme() {
 function setTheme(t) { settings.theme = t; store.set('hd.settings', settings); applyTheme(); }
 darkMQ.addEventListener?.('change', applyTheme);
 applyTheme();
+
+// ---------- sign-in ----------
+// Simple on-device sign-in: PINs are stored as hashes in this browser only.
+// It keeps estimators' surveys apart on a shared tablet; it is not server-side security.
+let session = store.get('hd.session', null);
+const currentUser = () => USERS.find(u => u.id === session?.user) || null;
+const userName = (id) => (USERS.find(u => u.id === id) || {}).name || '';
+async function pinHash(user, pin) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`hd:${user}:${pin}`));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function signOut() { session = null; localStorage.removeItem('hd.session'); go('#/'); route(); }
 
 function mergeDeep(base, over) {
   for (const k in over) {
@@ -154,6 +176,55 @@ function surveyTitle(s) {
   return a.clientName || (a.address && a.address.text) || T('untitled');
 }
 
+// Surveys made before sign-in existed have no owner: everyone sees them.
+function canSee(s) { return !s.owner || s.owner === session?.user; }
+function estimatorOf(s) { return userName(s.owner) || currentUser()?.name || ''; }
+
+function renderLogin(picked) {
+  const pins = store.get('hd.pins', {});
+  const u = USERS.find(x => x.id === picked);
+  if (!u) {
+    app.innerHTML = `
+      <main class="wrap login">
+        <div class="brand login-brand"><img src="icon.svg" alt=""><div><b>HighDusting</b><small>${T('appTitle')}</small></div></div>
+        <h2>${T('whoAreYou')}</h2>
+        <div class="login-users">${USERS.map(x => `<button class="chip user-btn" data-user="${x.id}"><span class="avatar">${esc(x.name[0])}</span>${esc(x.name)}</button>`).join('')}</div>
+      </main>`;
+    app.querySelectorAll('[data-user]').forEach(b => b.onclick = () => renderLogin(b.dataset.user));
+    return;
+  }
+  const isNew = !pins[u.id];
+  let first = null;
+  const draw = (title, note, err) => {
+    app.innerHTML = `
+      <main class="wrap login">
+        <button class="ghost" id="back">${T('back')}</button>
+        <div class="login-who"><span class="avatar big">${esc(u.name[0])}</span><h2>${esc(u.name)}</h2>
+          ${note ? `<p class="hint">${note}</p>` : ''}</div>
+        <label class="lbl">${title}</label>
+        <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" class="pin">
+        <p class="pin-err">${err || ''}</p>
+      </main>`;
+    app.querySelector('#back').onclick = () => renderLogin();
+    const inp = app.querySelector('#pin');
+    inp.focus();
+    inp.oninput = async () => {
+      inp.value = inp.value.replace(/\D/g, '').slice(0, 4);
+      if (inp.value.length < 4) return;
+      const h = await pinHash(u.id, inp.value);
+      if (!isNew) {
+        if (h === pins[u.id]) return enter();
+        return draw(T('enterPin'), '', T('wrongPin'));
+      }
+      if (!first) { first = h; return draw(T('repeatPin'), T('firstTime')); }
+      if (h !== first) { first = null; return draw(T('createPin'), T('firstTime'), T('pinMismatch')); }
+      pins[u.id] = h; store.set('hd.pins', pins); enter();
+    };
+  };
+  const enter = () => { session = { user: u.id }; store.set('hd.session', session); route(); };
+  draw(isNew ? T('createPin') : T('enterPin'), isNew ? T('firstTime') : '');
+}
+
 // ---------- router ----------
 const app = document.getElementById('app');
 window.addEventListener('hashchange', route);
@@ -161,8 +232,9 @@ function go(h) { location.hash = h; }
 
 function route() {
   document.documentElement.lang = 'en';
+  if (!currentUser()) return renderLogin();
   const [, view, id, sub] = location.hash.split('/');
-  if (view === 'e' && surveys[id]) {
+  if (view === 'e' && surveys[id] && canSee(surveys[id])) {
     if (sub === 'print') return renderPrint(surveys[id]);
     return renderSurvey(surveys[id], sub || CHECKLIST[0].id);
   }
@@ -172,11 +244,12 @@ function route() {
 
 // ---------- home ----------
 function renderHome() {
-  const list = Object.values(surveys).sort((a, b) => b.updated - a.updated);
+  const list = Object.values(surveys).filter(canSee).sort((a, b) => b.updated - a.updated);
   app.innerHTML = `
-    <header class="top"><div class="brand"><img src="icon.svg" alt=""><div><b>HighDusting</b><small>${T('appTitle')}</small></div></div>
-      <div class="row" style="margin:0"><button class="ghost" id="themeBtn" title="${T('theme')}">${currentTheme() === 'light' ? '☾' : '☀︎'}</button>
-      <button class="ghost" data-go="#/settings">⚙︎ ${T('settings')}</button></div></header>
+    <header class="top"><div class="brand"><img src="icon.svg" alt=""><div><b>HighDusting</b><small>👤 ${esc(currentUser().name)}</small></div></div>
+      <div class="top-actions"><button class="ghost" id="themeBtn" title="${T('theme')}">${currentTheme() === 'light' ? '☾' : '☀︎'}</button>
+      <button class="ghost" data-go="#/settings" title="${T('settings')}">⚙︎</button>
+      <button class="ghost" id="outBtn">${T('signOut')}</button></div></header>
     <main class="wrap">
       <button class="primary big" id="new">${T('newSurvey')}</button>
       ${list.length ? '' : `<p class="empty">${T('noSurveys')}</p>`}
@@ -191,10 +264,11 @@ function renderHome() {
           <div class="card-price">${e.total ? `${money(e.low)}<br>– ${money(e.high)}` : '—'}</div></li>`;
       }).join('')}</ul>
     </main>`;
+  app.querySelector('#outBtn').onclick = signOut;
   app.querySelector('#themeBtn').onclick = () => { setTheme(currentTheme() === 'light' ? 'dark' : 'light'); renderHome(); };
   app.querySelector('#new').onclick = () => {
     const id = uid();
-    surveys[id] = { id, created: Date.now(), updated: Date.now(), answers: { structure: { on: true } }, photos: [], notes: '' };
+    surveys[id] = { id, owner: session.user, created: Date.now(), updated: Date.now(), answers: { structure: { on: true } }, photos: [], notes: '' };
     saveSurveys(); go(`#/e/${id}/site`);
   };
   bindGo();
@@ -432,7 +506,7 @@ async function renderSummary(s, body) {
   body.querySelector('#share').onclick = () => shareOffice(s, e);
   body.querySelector('#dup').onclick = () => {
     const id = uid();
-    surveys[id] = { ...structuredClone(s), id, created: Date.now(), updated: Date.now(), photos: [] };
+    surveys[id] = { ...structuredClone(s), id, owner: session.user, created: Date.now(), updated: Date.now(), photos: [] };
     surveys[id].answers.clientName = T('copyOf') + (s.answers.clientName || '');
     saveSurveys(); go(`#/e/${id}/site`);
   };
@@ -455,7 +529,7 @@ function officeText(s, e) {
   lines.push('', `🧮 ${T('breakdown')}:`, ...e.lines.map(l => `  • ${l.label}: ${money(l.amount)}`));
   if (s.notes) lines.push('', `📝 ${s.notes}`);
   lines.push('', `${L('Photos')}: ${s.photos.length}`);
-  if (settings.estimator) lines.push(`${L('Estimator')}: ${settings.estimator}`);
+  if (estimatorOf(s)) lines.push(`${L('Estimator')}: ${estimatorOf(s)}`);
   return lines.join('\n');
 }
 
@@ -524,7 +598,7 @@ async function renderPrint(s) {
       ${stops.length ? `<section class="warnbox"><h4>Requires further assessment</h4><ul>${stops.map(f => `<li>${esc(f.text)}</li>`).join('')}</ul></section>` : ''}
       ${imgs.length ? `<section><h4>Site photos</h4><div class="doc-photos">${imgs.map(u => `<img src="${u}" alt="">`).join('')}</div></section>` : ''}
       <section class="fine"><p>This is a preliminary estimate based on an on-site walkthrough. The final quote confirms scope, access equipment, work windows, protection and number of visits. Combustible or hazardous dust is assessed separately before any method is proposed.</p>
-      ${settings.estimator ? `<p>Estimator: ${esc(settings.estimator)}</p>` : ''}</section>
+      ${estimatorOf(s) ? `<p>Estimator: ${esc(estimatorOf(s))}</p>` : ''}</section>
     </article>`;
 }
 
@@ -538,7 +612,8 @@ function renderSettings() {
     <main class="wrap">
       <div class="item"><label class="lbl">${T('theme')}</label><div class="chips">
         ${[['auto', 'themeAuto'], ['light', 'themeLight'], ['dark', 'themeDark']].map(([v, k]) => `<button class="chip ${(settings.theme || 'auto') === v ? 'on' : ''}" data-theme-set="${v}">${T(k)}</button>`).join('')}</div></div>
-      ${['estimator', 'company', 'phone', 'email'].map(k => `<div class="item"><label class="lbl">${T(k)}</label><input data-set="${k}" value="${esc(settings[k])}"></div>`).join('')}
+      <div class="item"><label class="lbl">${T('signIn')}</label><div class="row" style="margin:0;align-items:center;justify-content:space-between"><b>${esc(currentUser().name)}</b><button class="ghost" id="outBtn2">${T('signOut')}</button></div></div>
+      ${['company', 'phone', 'email'].map(k => `<div class="item"><label class="lbl">${T(k)}</label><input data-set="${k}" value="${esc(settings[k])}"></div>`).join('')}
       <h2>${T('ratesTitle')}</h2><p class="intro">${T('ratesNote')}</p>
       <div class="rates">${Object.entries(RATE_LABELS).map(([k, lab]) => `
         <label class="rate"><span>${L(lab)}</span><input type="number" step="any" inputmode="decimal" data-rate="${k}" value="${getPath(rates, k)}"></label>`).join('')}</div>
@@ -546,6 +621,7 @@ function renderSettings() {
         <button class="ghost" id="export">${T('exportData')}</button></div>
     </main>`;
   bindGo();
+  app.querySelector('#outBtn2').onclick = signOut;
   app.querySelectorAll('[data-theme-set]').forEach(b => b.onclick = () => { setTheme(b.dataset.themeSet); renderSettings(); });
   app.querySelectorAll('[data-set]').forEach(i => i.oninput = () => { settings[i.dataset.set] = i.value; store.set('hd.settings', settings); });
   app.querySelectorAll('[data-rate]').forEach(i => i.oninput = () => {
